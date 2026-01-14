@@ -19,14 +19,6 @@ from .config import ENV_ASR_PROVIDER, ENV_DASHSCOPE_KEY, ENV_FISH_KEY
 from .douyin import DouyinProcessor
 
 
-# 创建 MCP 服务器实例
-mcp = FastMCP(
-    "Douyin Video MCP Server",
-    dependencies=["requests", "ffmpeg-python", "tqdm", "dashscope"],
-)
-
-
-@mcp.tool()
 def get_douyin_download_link(share_link: str) -> str:
     """
     获取抖音视频的无水印下载链接
@@ -62,7 +54,6 @@ def get_douyin_download_link(share_link: str) -> str:
         )
 
 
-@mcp.tool()
 async def extract_douyin_text(
     share_link: str,
     model: Optional[str] = None,
@@ -122,7 +113,6 @@ async def extract_douyin_text(
         )
 
 
-@mcp.tool()
 def parse_douyin_video_info(share_link: str) -> str:
     """
     解析抖音分享链接，获取视频基本信息
@@ -156,7 +146,6 @@ def parse_douyin_video_info(share_link: str) -> str:
         )
 
 
-@mcp.resource("douyin://video/{video_id}")
 def get_video_info(video_id: str) -> str:
     """
     获取指定视频ID的详细信息
@@ -176,7 +165,6 @@ def get_video_info(video_id: str) -> str:
         return f"获取视频信息失败: {str(exc)}"
 
 
-@mcp.prompt()
 def douyin_text_extraction_guide() -> str:
     """抖音视频文本提取使用指南"""
     return f"""
@@ -225,6 +213,25 @@ def douyin_text_extraction_guide() -> str:
 """
 
 
+def build_server(host: str, port: int, path: str) -> FastMCP:
+    """创建并注册 MCP 服务器"""
+    mcp = FastMCP(
+        "Douyin Video MCP Server",
+        host=host,
+        port=port,
+        streamable_http_path=path,
+        dependencies=["requests", "ffmpeg-python", "tqdm", "dashscope"],
+    )
+
+    mcp.tool()(get_douyin_download_link)
+    mcp.tool()(extract_douyin_text)
+    mcp.tool()(parse_douyin_video_info)
+    mcp.resource("douyin://video/{video_id}")(get_video_info)
+    mcp.prompt()(douyin_text_extraction_guide)
+
+    return mcp
+
+
 def main(
     transport: str = "stdio",
     host: str = "127.0.0.1",
@@ -232,8 +239,12 @@ def main(
     path: str = "/mcp/",
 ):
     """启动MCP服务器"""
-    if transport in ("http", "sse"):
-        mcp.run(transport=transport, host=host, port=port, path=path)
+    mcp = build_server(host=host, port=port, path=path)
+    if transport == "http":
+        mcp.run(transport="streamable-http")
+        return
+    if transport == "sse":
+        mcp.run(transport="sse", mount_path=path)
         return
     mcp.run(transport="stdio")
 

@@ -34,6 +34,15 @@
 
 ![获取阿里云百炼API](https://files.mdnice.com/user/43439/36e658be-1ccf-41dd-87cf-d43fefde5c4e.png)
 
+如果使用 Fish Audio，请在以下页面创建 `FISH_API_KEY`：
+
+```
+https://fish.audio/zh-CN/app/api-keys/
+```
+
+![Fish API](static/fish-api.png)
+
+
 ### 步骤 2：选择传输方式并配置
 
 #### 方式 A：STDIO（推荐，本地即用）
@@ -66,6 +75,21 @@ HTTP 模式需要先启动一个长期运行的服务进程，然后客户端通
 uv run python -m douyin_video_mcp --transport http --host 127.0.0.1 --port 8000 --path /mcp/
 # 或者用 uvx（会自动下载并启动）
 uvx douyin-video-mcp --transport http --host 127.0.0.1 --port 8000 --path /mcp/
+```
+
+**说明：** 启动服务本身不需要任何 API Key，也不需要配置 `ASR_PROVIDER`。只有在调用 `extract_douyin_text` 进行语音识别时，才需要配置 `ASR_PROVIDER`（可选）以及 `DASHSCOPE_API_KEY` 或 `FISH_API_KEY`。
+
+**示例：设置 ASR 并启动（HTTP）**
+
+```bash
+# DashScope（默认 provider，可不设 ASR_PROVIDER）
+export DASHSCOPE_API_KEY=your-dashscope-key
+uv run python -m douyin_video_mcp --transport http --host 127.0.0.1 --port 8000 --path /mcp/
+
+# Fish Audio
+export ASR_PROVIDER=fish
+export FISH_API_KEY=your-fish-key
+uv run python -m douyin_video_mcp --transport http --host 127.0.0.1 --port 8000 --path /mcp/
 ```
 
 **也可以仅用环境变量控制启动方式：**
@@ -276,13 +300,3 @@ MIT License
 ## 🤝 贡献
 
 欢迎提交 Issue 和 Pull Request！我们期待您的参与和贡献。
-
-## 📝 更新日志
-
-### v1.0.0
-- 🎉 **首次发布**：初始版本
-- ✨ **核心功能**：支持抖音视频文本提取
-- 🔗 **链接获取**：支持获取无水印视频下载链接
-- 🔐 **环境配置**：从环境变量读取 API 密钥
-- 🧹 **自动清理**：自动清理临时文件
-- ⚙️ **灵活配置**：支持自定义 API 配置
