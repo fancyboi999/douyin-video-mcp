@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "douyin-video-mcp"
-version = "1.0.0"
+version = "1.0.1"
 description = "MCP server for downloading Douyin videos and Using ASR API to extract text"
 readme = "README.md"
 license = {text = "MIT"}
